@@ -183,7 +183,9 @@
     height: 100%;
     cursor: col-resize;
     z-index: 10;
-    transition: background 0.2s ease, opacity 0.2s ease;
+    transition:
+      background 0.2s ease,
+      opacity 0.2s ease;
   }
   .resize-handle:hover {
     background: var(--color-primary);
