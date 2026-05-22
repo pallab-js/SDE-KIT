@@ -7,10 +7,7 @@ use app_lib::persistence::Database;
 use tauri::Manager;
 use tempfile::tempdir;
 
-fn setup_test_app() -> (
-    tauri::App<tauri::test::MockRuntime>,
-    Database,
-) {
+fn setup_test_app() -> (tauri::App<tauri::test::MockRuntime>, Database) {
     let tmp = tempdir().unwrap();
     let db_path = tmp.keep();
     let db = Database::new(&db_path).unwrap();
@@ -183,7 +180,8 @@ fn test_milestone_crud_and_status() {
     assert_eq!(ms.status, app_lib::models::MilestoneStatus::Open);
 
     // 2. Read milestones
-    let milestones = get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
+    let milestones =
+        get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
     assert_eq!(milestones.len(), 1);
     assert_eq!(milestones[0].id, ms.id);
 
@@ -191,11 +189,16 @@ fn test_milestone_crud_and_status() {
     update_milestone_status(ms.id.clone(), "closed".to_string(), db_state.clone())
         .expect("Failed to update status");
 
-    let milestones_updated = get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
-    assert_eq!(milestones_updated[0].status, app_lib::models::MilestoneStatus::Closed);
+    let milestones_updated =
+        get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
+    assert_eq!(
+        milestones_updated[0].status,
+        app_lib::models::MilestoneStatus::Closed
+    );
 
     // 4. Delete milestone
     delete_milestone(ms.id.clone(), db_state.clone()).expect("Failed to delete milestone");
-    let milestones_final = get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
+    let milestones_final =
+        get_milestones(None, None, db_state.clone()).expect("Failed to get milestones");
     assert!(milestones_final.is_empty());
 }

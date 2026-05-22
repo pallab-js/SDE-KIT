@@ -164,8 +164,10 @@ pub fn sync_graph_from_sdlc(graph: State<GraphState>, db: State<Database>) -> Re
                     id: r.get(0)?,
                     title: r.get(1)?,
                     description: r.get(2)?,
-                    status: crate::models::TaskStatus::from_str(&st).unwrap_or(crate::models::TaskStatus::Todo),
-                    priority: crate::models::TaskPriority::from_str(&pr).unwrap_or(crate::models::TaskPriority::Medium),
+                    status: crate::models::TaskStatus::from_str(&st)
+                        .unwrap_or(crate::models::TaskStatus::Todo),
+                    priority: crate::models::TaskPriority::from_str(&pr)
+                        .unwrap_or(crate::models::TaskPriority::Medium),
                     created_at: r.get(5)?,
                     updated_at: r.get(6)?,
                     project_id: r.get(7)?,
@@ -187,7 +189,8 @@ pub fn sync_graph_from_sdlc(graph: State<GraphState>, db: State<Database>) -> Re
                     title: r.get(1)?,
                     description: r.get(2)?,
                     due_date: r.get(3)?,
-                    status: crate::models::MilestoneStatus::from_str(&st).unwrap_or(crate::models::MilestoneStatus::Open),
+                    status: crate::models::MilestoneStatus::from_str(&st)
+                        .unwrap_or(crate::models::MilestoneStatus::Open),
                     project_id: r.get(5)?,
                     created_at: r.get(6)?,
                     updated_at: r.get(7)?,

@@ -9,12 +9,6 @@
   import CodeEditor from './CodeEditor.svelte';
   import type { Tab } from '$lib/types';
 
-  let activeId = $state<string | null>(null);
-
-  $effect(() => {
-    activeTabId.subscribe((v) => (activeId = v));
-  });
-
   function onMiddleClick(e: MouseEvent, id: string) {
     if (e.button === 1) closeTab(id);
   }
@@ -45,10 +39,10 @@
       {#each $openTabs as tab (tab.id)}
         <button
           class="tab typo-caption"
-          class:active={activeId === tab.id}
+          class:active={$activeTabId === tab.id}
           class:dirty={tab.dirty}
           role="tab"
-          aria-selected={activeId === tab.id}
+          aria-selected={$activeTabId === tab.id}
           onclick={() => activeTabId.set(tab.id)}
           onmousedown={(e) => onMiddleClick(e, tab.id)}
           onkeydown={(e) => onTabKeydown(e, tab.id)}
@@ -85,14 +79,14 @@
     </div>
 
     <div class="tab-content" role="tabpanel">
-      {#if activeId?.startsWith('file:')}
+      {#if $activeTabId?.startsWith('file:')}
         {#if $splitMode}
           {@const files = $openTabs.filter(
-            (t) => t.id.startsWith('file:') && t.id !== activeId
+            (t) => t.id.startsWith('file:') && t.id !== $activeTabId
           )}
           <div class="split-container">
             <div class="split-pane" style="flex: {$splitRatio}">
-              <CodeEditor path={activeId.slice(5)} />
+              <CodeEditor path={$activeTabId.slice(5)} />
             </div>
             <div
               class="split-divider"
@@ -134,7 +128,7 @@
             </div>
           </div>
         {:else}
-          <CodeEditor path={activeId.slice(5)} />
+          <CodeEditor path={$activeTabId.slice(5)} />
         {/if}
       {:else}
         <div class="placeholder-editor">

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { activePanel, sidebarWidth } from '$lib/stores/workspace';
   import type { PanelId } from '$lib/types';
-  import { onMount } from 'svelte';
   import FileExplorer from './FileExplorer.svelte';
   import TasksPanel from './TasksPanel.svelte';
   import ProjectsPanel from './ProjectsPanel.svelte';
@@ -46,22 +45,16 @@
     git: 'M2.6 10.6a2 2 0 010-3.2l5-3.6a2 2 0 012.8.4l5.2 7a2 2 0 01-.4 2.8l-5 3.6a2 2 0 01-2.8-.4l-5.2-7z',
   };
 
-  let width = $state(240);
   let panelEl = $state<HTMLDivElement>();
-
-  onMount(() => {
-    sidebarWidth.subscribe((v) => (width = v));
-  });
 
   function startResize(e: MouseEvent) {
     const startX = e.clientX;
-    const startW = width;
+    const startW = $sidebarWidth;
     function onMouseMove(ev: MouseEvent) {
       const newWidth = Math.max(
         180,
-        Math.min(800, startW + (ev.clientX - startX))
+        Math.min(500, startW + (ev.clientX - startX))
       );
-      width = newWidth;
       sidebarWidth.set(newWidth);
     }
     function onMouseUp() {
@@ -75,13 +68,12 @@
   function autoFit() {
     if (!panelEl) return;
     const contentWidth = panelEl.scrollWidth;
-    const newWidth = Math.max(180, Math.min(800, contentWidth + 16));
-    width = newWidth;
+    const newWidth = Math.max(180, Math.min(500, contentWidth + 16));
     sidebarWidth.set(newWidth);
   }
 </script>
 
-<aside class="sidebar" style="width: {width}px">
+<aside class="sidebar" style="width: {$sidebarWidth}px">
   <div class="panel-header">
     <span class="panel-title typo-overline"
       >{PANEL_LABELS[$activePanel ?? 'explorer']}</span
@@ -191,9 +183,10 @@
     height: 100%;
     cursor: col-resize;
     z-index: 10;
+    transition: background 0.2s ease, opacity 0.2s ease;
   }
   .resize-handle:hover {
     background: var(--color-primary);
-    opacity: 0.3;
+    opacity: 0.5;
   }
 </style>

@@ -26,7 +26,6 @@
   let paletteOpen = $state(false);
 
   onMount(() => {
-    sidebarWidth.set(window.innerWidth / 2);
     bottomPanelOpen.set(false);
     restoreLayout();
     subscribeAndPersist();
