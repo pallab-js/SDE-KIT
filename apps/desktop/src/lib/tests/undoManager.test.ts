@@ -18,8 +18,12 @@ describe('undoManager', () => {
     undoManager.push({
       id: 'test',
       label: 'Increment',
-      undo: () => { value--; },
-      redo: () => { value++; },
+      undo: () => {
+        value--;
+      },
+      redo: () => {
+        value++;
+      },
     });
 
     expect(get(undoManager.state).canUndo).toBe(true);
@@ -33,8 +37,12 @@ describe('undoManager', () => {
     undoManager.push({
       id: 'test',
       label: 'Increment',
-      undo: () => { value--; },
-      redo: () => { value++; },
+      undo: () => {
+        value--;
+      },
+      redo: () => {
+        value++;
+      },
     });
 
     value = 1;

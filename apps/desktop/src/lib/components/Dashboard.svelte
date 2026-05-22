@@ -19,14 +19,16 @@
     loading = true;
     try {
       tasks = await getTasks();
-      todoCount = tasks.filter(t => t.status === 'todo').length;
-      doingCount = tasks.filter(t => t.status === 'doing').length;
-      doneCount = tasks.filter(t => t.status === 'done').length;
+      todoCount = tasks.filter((t) => t.status === 'todo').length;
+      doingCount = tasks.filter((t) => t.status === 'doing').length;
+      doneCount = tasks.filter((t) => t.status === 'done').length;
 
       if ($workspaceRoot) {
-        const entries = await invoke<any[]>('list_directory', { path: $workspaceRoot });
-        dirCount = entries.filter(e => e.is_dir).length;
-        fileCount = entries.filter(e => !e.is_dir).length;
+        const entries = await invoke<any[]>('list_directory', {
+          path: $workspaceRoot,
+        });
+        dirCount = entries.filter((e) => e.is_dir).length;
+        fileCount = entries.filter((e) => !e.is_dir).length;
 
         const search = await invoke<any[]>('search_in_files', {
           query: 'TODO',
@@ -133,11 +135,21 @@
     border-left: 3px solid var(--color-primary);
   }
 
-  .card.accent-todo { border-left-color: var(--color-muted-soft); }
-  .card.accent-doing { border-left-color: var(--color-warning); }
-  .card.accent-done { border-left-color: var(--color-success); }
-  .card.small { padding: var(--spacing-2); }
-  .card.warn { border-left-color: var(--color-warning); }
+  .card.accent-todo {
+    border-left-color: var(--color-muted-soft);
+  }
+  .card.accent-doing {
+    border-left-color: var(--color-warning);
+  }
+  .card.accent-done {
+    border-left-color: var(--color-success);
+  }
+  .card.small {
+    padding: var(--spacing-2);
+  }
+  .card.warn {
+    border-left-color: var(--color-warning);
+  }
 
   .card-value {
     font-family: var(--font-display);
@@ -145,7 +157,9 @@
     color: var(--color-on-dark);
   }
 
-  .card.small .card-value { font-size: 18px; }
+  .card.small .card-value {
+    font-size: 18px;
+  }
 
   .card-label {
     color: var(--color-muted);

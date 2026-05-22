@@ -10,7 +10,9 @@ function createTheme() {
 
   async function init() {
     try {
-      const stored = await invoke<string | null>('get_workspace_state', { key: STORAGE_KEY });
+      const stored = await invoke<string | null>('get_workspace_state', {
+        key: STORAGE_KEY,
+      });
       if (stored === 'light' || stored === 'dark') {
         apply(stored);
       }
@@ -38,7 +40,9 @@ function createTheme() {
 
   function getCurrent(): ThemeMode {
     let val: ThemeMode = 'dark';
-    store.subscribe(v => { val = v; })();
+    store.subscribe((v) => {
+      val = v;
+    })();
     return val;
   }
 

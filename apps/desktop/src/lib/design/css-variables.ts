@@ -1,4 +1,12 @@
-import { colors, spacing, radius, typography, surfaces, text, componentTokens } from './tokens';
+import {
+  colors,
+  spacing,
+  radius,
+  typography,
+  surfaces,
+  text,
+  componentTokens,
+} from './tokens';
 
 /**
  * CSS variable name mappings for Tailwind v4 @theme integration.
@@ -42,7 +50,9 @@ export const cssVar = {
  * Generates CSS custom property declarations from design tokens
  * for a given theme mode.
  */
-export function generateCSSVariables(theme: 'light' | 'dark' = 'dark'): Record<string, string> {
+export function generateCSSVariables(
+  theme: 'light' | 'dark' = 'dark'
+): Record<string, string> {
   const s = theme === 'dark' ? surfaces.dark : surfaces.light;
   const t = theme === 'dark' ? text.dark : text.light;
 

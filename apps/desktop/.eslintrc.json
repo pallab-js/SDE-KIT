@@ -1,9 +1,0 @@
-{
-  "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint", "svelte"],
-  "extends": ["plugin:@typescript-eslint/recommended", "plugin:svelte/recommended"],
-  "rules": {
-    "@typescript-eslint/no-explicit-any": "warn",
-    "no-console": ["warn", { "allow": ["error", "warn"] }]
-  }
-}

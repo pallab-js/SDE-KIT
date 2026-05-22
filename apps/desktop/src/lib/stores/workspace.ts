@@ -11,52 +11,52 @@ export const leftSidebarVisible = writable(false);
 export const workspaceRoot = writable<string | null>(null);
 
 export function openTab(tab: Tab) {
-	openTabs.update((tabs) => {
-		if (tabs.some((t) => t.id === tab.id)) return tabs;
-		const updated = [...tabs, tab];
-		activeTabId.set(tab.id);
-		return updated;
-	});
+  openTabs.update((tabs) => {
+    if (tabs.some((t) => t.id === tab.id)) return tabs;
+    const updated = [...tabs, tab];
+    activeTabId.set(tab.id);
+    return updated;
+  });
 }
 
 export function closeTab(id: string) {
-	openTabs.update((tabs) => {
-		const tab = tabs.find(t => t.id === id);
-		if (tab?.filePath) evictFileContent(tab.filePath);
-		const idx = tabs.findIndex((t) => t.id === id);
-		const updated = tabs.filter((t) => t.id !== id);
-		const current = get(activeTabId);
-		if (current === id && updated.length > 0) {
-			const next = Math.min(idx, updated.length - 1);
-			activeTabId.set(updated[next].id);
-		} else if (updated.length === 0) {
-			activeTabId.set(null);
-		}
-		return updated;
-	});
+  openTabs.update((tabs) => {
+    const tab = tabs.find((t) => t.id === id);
+    if (tab?.filePath) evictFileContent(tab.filePath);
+    const idx = tabs.findIndex((t) => t.id === id);
+    const updated = tabs.filter((t) => t.id !== id);
+    const current = get(activeTabId);
+    if (current === id && updated.length > 0) {
+      const next = Math.min(idx, updated.length - 1);
+      activeTabId.set(updated[next].id);
+    } else if (updated.length === 0) {
+      activeTabId.set(null);
+    }
+    return updated;
+  });
 }
 
 let _lastPanel: PanelId = 'explorer';
 
 export function togglePanel(id: PanelId) {
-	activePanel.update((current) => {
-		if (current === id) {
-			_lastPanel = id;
-			return null;
-		}
-		_lastPanel = current ?? _lastPanel;
-		return id;
-	});
+  activePanel.update((current) => {
+    if (current === id) {
+      _lastPanel = id;
+      return null;
+    }
+    _lastPanel = current ?? _lastPanel;
+    return id;
+  });
 }
 
 export function toggleSidebar() {
-	activePanel.update((current) => {
-		if (current === null) return _lastPanel;
-		_lastPanel = current;
-		return null;
-	});
+  activePanel.update((current) => {
+    if (current === null) return _lastPanel;
+    _lastPanel = current;
+    return null;
+  });
 }
 
 export function toggleBottom() {
-	bottomPanelOpen.update((v) => !v);
+  bottomPanelOpen.update((v) => !v);
 }

@@ -28,8 +28,12 @@ async function runGit(args: string[]): Promise<string> {
   let stdout = '';
   let stderr = '';
 
-  cmd.stdout.on('data', (line: string) => { stdout += line; });
-  cmd.stderr.on('data', (line: string) => { stderr += line; });
+  cmd.stdout.on('data', (line: string) => {
+    stdout += line;
+  });
+  cmd.stderr.on('data', (line: string) => {
+    stderr += line;
+  });
 
   const result = await cmd.execute();
   if (result.code !== 0 && stderr.trim()) {
@@ -49,11 +53,14 @@ export async function getStatus(): Promise<GitStatusEntry[]> {
     const stdout = await runGit(['status', '--porcelain']);
     if (!stdout.trim()) return [];
 
-    return stdout.split('\n').filter(Boolean).map(line => ({
-      status: line.substring(0, 2).trim(),
-      path: line.substring(3).trim(),
-      staged: line[0] !== ' ' && line[0] !== '?',
-    }));
+    return stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => ({
+        status: line.substring(0, 2).trim(),
+        path: line.substring(3).trim(),
+        staged: line[0] !== ' ' && line[0] !== '?',
+      }));
   } catch {
     return [];
   }
@@ -62,11 +69,15 @@ export async function getStatus(): Promise<GitStatusEntry[]> {
 export async function getBranches(): Promise<GitBranch> {
   try {
     const stdout = await runGit(['branch']);
-    const branches = stdout.split('\n').filter(Boolean).map(b => b.trim());
-    const current = branches.find(b => b.startsWith('*'))?.replace('* ', '') ?? 'main';
+    const branches = stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((b) => b.trim());
+    const current =
+      branches.find((b) => b.startsWith('*'))?.replace('* ', '') ?? 'main';
     return {
       current,
-      branches: branches.map(b => b.replace('* ', '')),
+      branches: branches.map((b) => b.replace('* ', '')),
     };
   } catch {
     return { current: 'unknown', branches: [] };
@@ -92,15 +103,24 @@ export async function commit(message: string): Promise<void> {
 export async function getLog(count = 10): Promise<GitLogEntry[]> {
   try {
     const stdout = await runGit([
-      'log', `--max-count=${count}`,
+      'log',
+      `--max-count=${count}`,
       '--format=%H|||%s|||%an|||%ar',
     ]);
     if (!stdout.trim()) return [];
 
-    return stdout.split('\n').filter(Boolean).map(line => {
-      const [hash, message, author, date] = line.split('|||');
-      return { hash: hash?.slice(0, 7) ?? '', message: message ?? '', author: author ?? '', date: date ?? '' };
-    });
+    return stdout
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => {
+        const [hash, message, author, date] = line.split('|||');
+        return {
+          hash: hash?.slice(0, 7) ?? '',
+          message: message ?? '',
+          author: author ?? '',
+          date: date ?? '',
+        };
+      });
   } catch {
     return [];
   }
@@ -108,7 +128,9 @@ export async function getLog(count = 10): Promise<GitLogEntry[]> {
 
 export async function getDiff(path: string, staged = false): Promise<string> {
   try {
-    const args = staged ? ['diff', '--cached', '--', path] : ['diff', '--', path];
+    const args = staged
+      ? ['diff', '--cached', '--', path]
+      : ['diff', '--', path];
     return await runGit(args);
   } catch {
     return '';

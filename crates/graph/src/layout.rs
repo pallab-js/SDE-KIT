@@ -1,5 +1,5 @@
 use crate::types::{GraphEdge, GraphNode, NodePosition};
-use rand::{Rng, SeedableRng, rngs::StdRng};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use std::collections::HashMap;
 
 // Constants for the simple function-based layout
@@ -163,7 +163,10 @@ impl Default for ForceDirectedLayout {
 
 impl ForceDirectedLayout {
     pub fn new(seed: u64) -> Self {
-        Self { seed, ..Self::default() }
+        Self {
+            seed,
+            ..Self::default()
+        }
     }
 
     /// Run the full simulation, returning final positions.
@@ -264,7 +267,11 @@ impl ForceDirectedLayout {
             for node in nodes {
                 let id = node.id.as_str();
                 let (x, y) = pos[id];
-                let mass = self.masses.get(&node.node_type).copied().unwrap_or(default_mass);
+                let mass = self
+                    .masses
+                    .get(&node.node_type)
+                    .copied()
+                    .unwrap_or(default_mass);
                 let f = forces.get_mut(id).unwrap();
 
                 // Center gravity

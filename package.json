@@ -16,5 +16,8 @@
 		"test": "cargo test --manifest-path apps/desktop/src-tauri/Cargo.toml && cargo test -p sde-kit-graph",
 		"lint": "npm run check -w apps/desktop",
 		"clean": "rm -rf apps/*/build apps/*/.svelte-kit apps/*/src-tauri/target"
+	},
+	"devDependencies": {
+		"lefthook": "^2.1.8"
 	}
 }

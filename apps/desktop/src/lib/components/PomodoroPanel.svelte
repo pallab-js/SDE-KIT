@@ -1,33 +1,65 @@
 <script lang="ts">
   import { pomodoro } from '$lib/stores/pomodoro';
 
-  let s = $state({ status: 'idle' as string, timeLeft: 1500, sessionsCompleted: 0 });
-  $effect(() => pomodoro.subscribe(v => { s = v; }));
+  let s = $state({
+    status: 'idle' as string,
+    timeLeft: 1500,
+    sessionsCompleted: 0,
+  });
+  $effect(() =>
+    pomodoro.subscribe((v) => {
+      s = v;
+    })
+  );
 </script>
 
 <div class="pomodoro">
   <div class="timer">
     <span class="time typo-display-xl">{pomodoro.formatTime(s.timeLeft)}</span>
-    <span class="status typo-overline">{s.status === 'idle' ? 'Ready' : s.status === 'focus' ? 'Focus' : s.status === 'break' ? 'Break' : 'Paused'}</span>
+    <span class="status typo-overline"
+      >{s.status === 'idle'
+        ? 'Ready'
+        : s.status === 'focus'
+          ? 'Focus'
+          : s.status === 'break'
+            ? 'Break'
+            : 'Paused'}</span
+    >
   </div>
 
   <div class="controls">
     {#if s.status === 'idle' || s.status === 'paused'}
-      <button class="control-btn typo-caption" onclick={() => pomodoro.start()}>Start</button>
+      <button class="control-btn typo-caption" onclick={() => pomodoro.start()}
+        >Start</button
+      >
     {:else if s.status === 'focus' || s.status === 'break'}
-      <button class="control-btn typo-caption" onclick={() => pomodoro.pause()}>Pause</button>
-      <button class="control-btn secondary typo-caption" onclick={() => pomodoro.stop()}>Stop</button>
+      <button class="control-btn typo-caption" onclick={() => pomodoro.pause()}
+        >Pause</button
+      >
+      <button
+        class="control-btn secondary typo-caption"
+        onclick={() => pomodoro.stop()}>Stop</button
+      >
     {/if}
   </div>
 
   {#if s.sessionsCompleted > 0}
-    <span class="session-count typo-small">{s.sessionsCompleted} session{s.sessionsCompleted > 1 ? 's' : ''} today</span>
+    <span class="session-count typo-small"
+      >{s.sessionsCompleted} session{s.sessionsCompleted > 1 ? 's' : ''} today</span
+    >
   {/if}
 
   <div class="settings">
     <label class="typo-small">
       Focus
-      <select class="typo-caption" value={Math.floor(s.timeLeft / 60)} onchange={(e) => pomodoro.setFocusDuration(Number((e.target as HTMLSelectElement).value) * 60)}>
+      <select
+        class="typo-caption"
+        value={Math.floor(s.timeLeft / 60)}
+        onchange={(e) =>
+          pomodoro.setFocusDuration(
+            Number((e.target as HTMLSelectElement).value) * 60
+          )}
+      >
         <option value="15">15m</option>
         <option value="25">25m</option>
         <option value="30">30m</option>
@@ -37,7 +69,14 @@
     </label>
     <label class="typo-small">
       Break
-      <select class="typo-caption" value={5} onchange={(e) => pomodoro.setBreakDuration(Number((e.target as HTMLSelectElement).value) * 60)}>
+      <select
+        class="typo-caption"
+        value={5}
+        onchange={(e) =>
+          pomodoro.setBreakDuration(
+            Number((e.target as HTMLSelectElement).value) * 60
+          )}
+      >
         <option value="5">5m</option>
         <option value="10">10m</option>
         <option value="15">15m</option>

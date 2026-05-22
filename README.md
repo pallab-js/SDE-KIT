@@ -1,93 +1,104 @@
 # SDE Kit
 
-A **local-first SDLC desktop platform** — manage your entire software development lifecycle offline, without cloud dependencies.
+A **local-first SDLC desktop platform** — manage your entire software development lifecycle completely offline, with zero cloud dependencies.
 
-Built with Rust + Tauri 2.x + SvelteKit + TailwindCSS v4.
+SDE-KIT is engineered as an enterprise-grade, privacy-centric workspace for solo developers to organize repositories, track tasks, manage milestones, take notes, compile code relations, and write software securely in a fully offline desktop environment.
 
-## Features
+Built with **Rust + Tauri v2 + Svelte 5 (Runes) + Vanilla CSS Variables**.
 
-- **Workspace Management** — Open and manage project folders with full file tree navigation
-- **Code Editor** — Syntax-highlighted editing via CodeMirror with multi-language support
-- **Task Board** — Kanban-style task management with drag-and-drop, priority levels, and status tracking
-- **Milestone Tracking** — Track project milestones with due dates and open/close status
-- **Graph Visualization** — Interactive node-edge graph for relationship mapping (pan, zoom, drag)
-- **Command Palette** — Quick access to all actions via `Cmd+P`
-- **SQLite Persistence** — All data stored locally, zero cloud dependencies
-- **Split Editor** — Side-by-side file editing
-- **Full Keyboard Navigation** — Vim-like shortcuts for panel switching and commands
+---
+
+## Key Enterprise Features
+
+- **📂 Workspace Management** — Open and index project folders with full file tree navigation and safe filesystem sandboxing constraints.
+- **💻 Integrated Editor** — High-speed, side-by-side editing utilizing CodeMirror 6 with local offline syntax highlighting extensions.
+- **⊞ Virtual Kanban Board** — Drag-and-drop task boards optimized via IntersectionObserver-based virtual scrolling for smooth rendering of large datasets.
+- **🏁 Milestones Tracking** — Align tasks to milestones and visually track completion percentages (via modular sub-components).
+- **📝 Dedicated Local Notes** — Standalone scratchpad note cards linked directly to local SQLite projects.
+- **🕸 Relationship Graphs** — Custom force-directed canvas layout engine written in Rust to visualize code relations.
+- **⚡ Connection Pooling** — Concurrent thread-safe database connection pooling utilizing `r2d2` with Write-Ahead Logging (`WAL` journal) enabled.
+- **🔄 Database Migrations** — Managed schemas via version-controlled `rusqlite_migration` upgrades.
+- **💾 Offline Local Export** — One-click JSON and SQLite database exports generating direct object-URL downloads.
+- **🚨 Unified Error & Loading UX** — Universal exception handler translating backend Rust errors into visual glassmorphic overlays and floating Toast alerts.
+- **🛡 CSP Sandboxing** — Strict Content Security Policies and strict path verification guards (`check_root_strict`) to prevent unauthorized traversals.
+
+---
 
 ## Architecture
 
 ```
-apps/desktop/     → Tauri desktop application (SvelteKit frontend + Rust backend)
-crates/graph/     → Graph engine (Rust workspace crate)
-scripts/          → Build and release automation
+SDE-KIT/
+├── apps/
+│   └── desktop/               # Tauri & Svelte Desktop App
+│       ├── src/               # Svelte 5 Frontend
+│       │   ├── lib/
+│       │   │   ├── components/# Reusable UI Components
+│       │   │   ├── services/  # Tauri API bridge services
+│       │   │   ├── stores/    # Svelte application stores
+│       │   │   └── tests/     # Vitest coverage suites
+│       │   └── routes/        # App View Shells
+│       └── src-tauri/         # Rust Backend
+│           ├── src/
+│           │   ├── commands/  # Split domain bridge command files
+│           │   ├── models/    # Domain data types
+│           │   ├── persistence/# SQLite pool & migration logic
+│           │   ├── watcher/   # Safe filesystem watchers
+│           │   └── lib.rs     # Tauri startup & bridge setup
+│           └── tests/         # Cargo integration tests
+├── crates/
+│   └── graph/                 # Dedicated Local Graph analysis crate
+├── lefthook.yml               # Git pre-commit hooks orchestrator
+└── package.json               # Monorepo and tool script runner
 ```
 
-## Prerequisites
+---
 
-- **Node.js** 22+
+## Development & Build Environment
+
+The repository is fully optimized to run under **Bun** as a high-performance package and script execution runner.
+
+### Prerequisites
+
+- **Bun** (Recommended drop-in Node/NPM replacement)
 - **Rust** 1.77+
 - **Tauri CLI** 2.x — `cargo install tauri-cli`
 
-## Development
+### Running the App
 
 ```bash
-# Install frontend dependencies
-npm install
+# Install dependencies
+bun install
 
-# Run in development mode (hot-reload)
-npm run dev
+# Run application in hot-reload development mode
+bun run dev
 
-# Type-check frontend
-npm run check
+# Run Svelte and TypeScript safety check
+bun run check
 
-# Type-check everything (frontend + Rust)
-npm run check:all
-
-# Run tests
-npm run test
-
-# Build production DMG/app bundle
-npm run release
+# Check linting and formatting compliance
+bun run lint:js
+bun run format
 ```
 
-## Scripts
+### Testing Pipelines
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Run in development mode with hot-reload |
-| `npm run build` | Build for development |
-| `npm run release` | Build for production (DMG/app bundle) |
-| `npm run check` | Type-check Svelte/TypeScript frontend |
-| `npm run check:all` | Type-check frontend + Rust (`cargo check`) |
-| `npm run test` | Run Rust unit + integration tests |
-| `npm run clean` | Remove all build artifacts |
+```bash
+# Run Svelte Vitest frontend suites
+bun run test
 
-## Design System
+# Run Rust unit and database integration tests
+cargo test
+```
 
-Typography follows a simplified IDE scale defined in `plan.md`:
+### Production Release
 
-| Token | Size | Usage |
-|-------|------|-------|
-| Heading XL | 28px | Welcome screen, error pages |
-| Heading L | 24px | Empty state icons |
-| Heading M | 20px | Section headings |
-| Heading S | 16px | Panel titles, action icons |
-| Body | 14px | Body text, buttons, inputs |
-| Caption | 12px | Tabs, file tree, metadata |
-| Mono | 13px | Code editor, log output, shortcuts |
+```bash
+# Compile the local optimized installer DMG/app bundle
+bun run release
+```
 
-All font sizes are enforced via `.typo-*` utility classes for consistency across all components.
+---
 
-## Stack
+## Contributing
 
-| Layer | Technology |
-|-------|-----------|
-| Desktop Shell | Tauri 2.x |
-| Frontend | SvelteKit 2 + Svelte 5 (runes) |
-| Styling | TailwindCSS v4 (CSS-first config) |
-| Editor | CodeMirror 6 |
-| Backend | Rust (SQLite via rusqlite) |
-| Graph | Custom force-directed layout engine (Rust) |
-| Target | macOS 14+ (Apple Silicon), cross-platform compatible |
+For coding styles, component refactoring thresholds, connection pooling rules, and database schema conventions, please consult the [CONTRIBUTING.md](CONTRIBUTING.md) onboarding reference.

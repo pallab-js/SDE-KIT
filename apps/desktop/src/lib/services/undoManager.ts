@@ -16,18 +16,23 @@ export interface UndoState {
 function createUndoManager() {
   const past = writable<UndoAction[]>([]);
   const future = writable<UndoAction[]>([]);
-  const state = writable<UndoState>({ canUndo: false, canRedo: false, currentLabel: null });
+  const state = writable<UndoState>({
+    canUndo: false,
+    canRedo: false,
+    currentLabel: null,
+  });
 
   function updateState() {
     state.set({
       canUndo: get(past).length > 0,
       canRedo: get(future).length > 0,
-      currentLabel: get(past).length > 0 ? get(past)[get(past).length - 1].label : null,
+      currentLabel:
+        get(past).length > 0 ? get(past)[get(past).length - 1].label : null,
     });
   }
 
   function push(action: UndoAction) {
-    past.update(p => [...p, action]);
+    past.update((p) => [...p, action]);
     future.set([]);
     updateState();
   }
@@ -37,8 +42,8 @@ function createUndoManager() {
     if (p.length === 0) return;
     const action = p[p.length - 1];
     action.undo();
-    past.update(p => p.slice(0, -1));
-    future.update(f => [...f, action]);
+    past.update((p) => p.slice(0, -1));
+    future.update((f) => [...f, action]);
     updateState();
   }
 
@@ -47,8 +52,8 @@ function createUndoManager() {
     if (f.length === 0) return;
     const action = f[f.length - 1];
     action.redo();
-    past.update(p => [...p, action]);
-    future.update(f => f.slice(0, -1));
+    past.update((p) => [...p, action]);
+    future.update((f) => f.slice(0, -1));
     updateState();
   }
 

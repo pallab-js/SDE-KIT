@@ -1,4 +1,9 @@
+use crate::error::AppError;
 use crate::watcher;
+use serde::{Deserialize, Serialize};
+use std::path::{Path, PathBuf};
+use std::sync::Mutex;
+use tauri::State;
 
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct SearchResult {
@@ -12,9 +17,14 @@ pub fn search_in_files(
     query: String,
     root: State<WorkspaceRoot>,
     case_sensitive: bool,
-) -> Result<Vec<SearchResult>, String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
-    let base = root_guard.clone().ok_or("no workspace root set")?;
+) -> Result<Vec<SearchResult>, AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let base = root_guard
+        .clone()
+        .ok_or_else(|| AppError::Workspace("no workspace root set".into()))?;
     drop(root_guard);
 
     let mut results = Vec::new();
@@ -29,9 +39,11 @@ fn search_dir(
     case_sensitive: bool,
     results: &mut Vec<SearchResult>,
     depth: usize,
-) -> Result<(), String> {
-    if depth > 10 { return Ok(()); }
-    let entries = std::fs::read_dir(dir).map_err(|e| e.to_string())?;
+) -> Result<(), AppError> {
+    if depth > 10 {
+        return Ok(());
+    }
+    let entries = std::fs::read_dir(dir)?;
     for entry in entries.flatten() {
         let path = entry.path();
         let name = path.file_name().unwrap_or_default().to_string_lossy();
@@ -54,19 +66,15 @@ fn search_dir(
                         line_number: i + 1,
                         line: line.trim().to_string(),
                     });
-                    if results.len() >= 500 { return Ok(()); }
+                    if results.len() >= 500 {
+                        return Ok(());
+                    }
                 }
             }
         }
     }
     Ok(())
 }
-
-
-use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use tauri::State;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FileEntry {
@@ -79,23 +87,27 @@ pub struct FileEntry {
 
 pub struct WorkspaceRoot(pub Mutex<Option<PathBuf>>);
 
-fn resolve_within_root(root: &Path, requested: &str) -> Result<PathBuf, String> {
-    let root_canonical = root.canonicalize().map_err(|_| "invalid workspace root".to_string())?;
+fn resolve_within_root(root: &Path, requested: &str) -> Result<PathBuf, AppError> {
+    let root_canonical = root
+        .canonicalize()
+        .map_err(|_| AppError::Workspace("invalid workspace root".to_string()))?;
     let joined = root_canonical.join(requested);
     if joined.exists() {
-        let canonical = joined.canonicalize().map_err(|_| "path does not exist".to_string())?;
+        let canonical = joined
+            .canonicalize()
+            .map_err(|_| AppError::Workspace("path does not exist".to_string()))?;
         if canonical.starts_with(&root_canonical) {
             return Ok(canonical);
         }
-        return Err("path traversal denied".to_string());
+        return Err(AppError::Workspace("path traversal denied".to_string()));
     }
     if !joined.starts_with(&root_canonical) {
-        return Err("path traversal denied".to_string());
+        return Err(AppError::Workspace("path traversal denied".to_string()));
     }
     Ok(joined)
 }
 
-fn check_root(path: &str, root: &Option<PathBuf>) -> Result<PathBuf, String> {
+fn check_root(path: &str, root: &Option<PathBuf>) -> Result<PathBuf, AppError> {
     let p = Path::new(path);
     match root {
         Some(r) => resolve_within_root(r, path),
@@ -103,12 +115,19 @@ fn check_root(path: &str, root: &Option<PathBuf>) -> Result<PathBuf, String> {
             if !p.exists() {
                 let parent = p.parent().unwrap_or(p);
                 if !parent.exists() {
-                    return Err("path does not exist".to_string());
+                    return Err(AppError::Workspace("path does not exist".to_string()));
                 }
             }
             Ok(p.to_path_buf())
         }
     }
+}
+
+fn check_root_strict(path: &str, root: &Option<PathBuf>) -> Result<PathBuf, AppError> {
+    let r = root
+        .as_ref()
+        .ok_or_else(|| AppError::Workspace("no workspace root set".to_string()))?;
+    resolve_within_root(r, path)
 }
 
 fn normalize_path(raw: &Path) -> String {
@@ -125,34 +144,55 @@ fn fmt_time(meta: &std::fs::Metadata) -> String {
 pub fn set_workspace_root(
     path: String,
     root: State<WorkspaceRoot>,
+    active_watcher: State<crate::ActiveWatcher>,
     app: tauri::AppHandle,
-) -> Result<(), String> {
-    let p = Path::new(&path).canonicalize().map_err(|e| format!("invalid path: {e}"))?;
+) -> Result<(), AppError> {
+    let p = Path::new(&path)
+        .canonicalize()
+        .map_err(|e| AppError::Workspace(format!("invalid path: {e}")))?;
     if !p.is_dir() {
-        return Err("not a directory".to_string());
+        return Err(AppError::Workspace("not a directory".to_string()));
     }
-    let mut state = root.0.lock().map_err(|e| e.to_string())?;
+    let mut state = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     *state = Some(p.clone());
+
+    // Stop old watcher if exists by dropping the handle
+    let mut watcher_guard = active_watcher
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    *watcher_guard = None;
+
     // Start watching the new workspace root
-    watcher::start_watching(app, normalize_path(&p))?;
+    let handle = watcher::start_watching(app, normalize_path(&p)).map_err(AppError::Workspace)?;
+    *watcher_guard = Some(handle);
     Ok(())
 }
 
 #[tauri::command]
-pub fn list_directory(path: String, root: State<WorkspaceRoot>) -> Result<Vec<FileEntry>, String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
+pub fn list_directory(
+    path: String,
+    root: State<WorkspaceRoot>,
+) -> Result<Vec<FileEntry>, AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     let dir = check_root(&path, &root_guard)?;
     drop(root_guard);
     if !dir.is_dir() {
-        return Err("not a directory".to_string());
+        return Err(AppError::Workspace("not a directory".to_string()));
     }
 
     let mut entries: Vec<FileEntry> = Vec::new();
-    let mut read_dir = std::fs::read_dir(&dir).map_err(|e| format!("failed to read directory: {e}"))?;
+    let mut read_dir = std::fs::read_dir(&dir)?;
 
-    while let Some(entry) = read_dir.next().transpose().map_err(|e| e.to_string())? {
-        let meta = entry.metadata().map_err(|e| e.to_string())?;
-        let file_type = entry.file_type().map_err(|e| e.to_string())?;
+    while let Some(entry) = read_dir.next().transpose()? {
+        let meta = entry.metadata()?;
+        let file_type = entry.file_type()?;
         entries.push(FileEntry {
             name: entry.file_name().to_string_lossy().to_string(),
             path: normalize_path(&entry.path()),
@@ -174,58 +214,93 @@ pub fn list_directory(path: String, root: State<WorkspaceRoot>) -> Result<Vec<Fi
 }
 
 #[tauri::command]
-pub fn read_file(path: String, root: State<WorkspaceRoot>) -> Result<String, String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
+pub fn read_file(path: String, root: State<WorkspaceRoot>) -> Result<String, AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     let resolved = check_root(&path, &root_guard)?;
     drop(root_guard);
-    std::fs::read_to_string(&resolved).map_err(|e| format!("failed to read file: {e}"))
+    let content = std::fs::read_to_string(&resolved)?;
+    Ok(content)
 }
 
 #[tauri::command]
-pub fn write_file(path: String, content: String, root: State<WorkspaceRoot>) -> Result<(), String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
-    let resolved = check_root(&path, &root_guard)?;
+pub fn write_file(
+    path: String,
+    content: String,
+    root: State<WorkspaceRoot>,
+) -> Result<(), AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let resolved = check_root_strict(&path, &root_guard)?;
     drop(root_guard);
-    std::fs::write(&resolved, &content).map_err(|e| format!("failed to write file: {e}"))
+    std::fs::write(&resolved, &content)?;
+    Ok(())
 }
 
 #[tauri::command]
-pub fn create_directory(path: String, root: State<WorkspaceRoot>) -> Result<(), String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
-    let resolved = check_root(&path, &root_guard)?;
+pub fn create_directory(path: String, root: State<WorkspaceRoot>) -> Result<(), AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let resolved = check_root_strict(&path, &root_guard)?;
     drop(root_guard);
-    std::fs::create_dir_all(&resolved).map_err(|e| format!("failed to create directory: {e}"))
+    std::fs::create_dir_all(&resolved)?;
+    Ok(())
 }
 
 #[tauri::command]
-pub fn delete_file(path: String, root: State<WorkspaceRoot>) -> Result<(), String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
-    let resolved = check_root(&path, &root_guard)?;
+pub fn delete_file(path: String, root: State<WorkspaceRoot>) -> Result<(), AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let resolved = check_root_strict(&path, &root_guard)?;
     drop(root_guard);
     if resolved.is_dir() {
-        std::fs::remove_dir_all(&resolved).map_err(|e| format!("failed to delete directory: {e}"))
+        std::fs::remove_dir_all(&resolved)?;
     } else {
-        std::fs::remove_file(&resolved).map_err(|e| format!("failed to delete file: {e}"))
+        std::fs::remove_file(&resolved)?;
     }
+    Ok(())
 }
 
 #[tauri::command]
-pub fn rename_file(old_path: String, new_path: String, root: State<WorkspaceRoot>) -> Result<(), String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
-    let old_resolved = check_root(&old_path, &root_guard)?;
-    let new_resolved = check_root(&new_path, &root_guard)?;
+pub fn rename_file(
+    old_path: String,
+    new_path: String,
+    root: State<WorkspaceRoot>,
+) -> Result<(), AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
+    let old_resolved = check_root_strict(&old_path, &root_guard)?;
+    let new_resolved = check_root_strict(&new_path, &root_guard)?;
     drop(root_guard);
-    std::fs::rename(&old_resolved, &new_resolved).map_err(|e| format!("failed to rename: {e}"))
+    std::fs::rename(&old_resolved, &new_resolved)?;
+    Ok(())
 }
 
 #[tauri::command]
-pub fn get_file_info(path: String, root: State<WorkspaceRoot>) -> Result<FileEntry, String> {
-    let root_guard = root.0.lock().map_err(|e| e.to_string())?;
+pub fn get_file_info(path: String, root: State<WorkspaceRoot>) -> Result<FileEntry, AppError> {
+    let root_guard = root
+        .0
+        .lock()
+        .map_err(|e| AppError::Internal(e.to_string()))?;
     let resolved = check_root(&path, &root_guard)?;
     drop(root_guard);
-    let meta = resolved.metadata().map_err(|e| format!("failed to read metadata: {e}"))?;
+    let meta = resolved.metadata()?;
     Ok(FileEntry {
-        name: resolved.file_name().unwrap_or_default().to_string_lossy().to_string(),
+        name: resolved
+            .file_name()
+            .unwrap_or_default()
+            .to_string_lossy()
+            .to_string(),
         path: normalize_path(&resolved),
         is_dir: resolved.is_dir(),
         size: meta.len(),

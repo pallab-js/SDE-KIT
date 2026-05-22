@@ -73,32 +73,81 @@ export const text = {
 } as const;
 
 export const typography = {
-  fontDisplay: "'Cormorant Garamond', 'EB Garamond', 'Tiempos Headline', Georgia, 'Times New Roman', serif",
-  fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+  fontDisplay:
+    "'Cormorant Garamond', 'EB Garamond', 'Tiempos Headline', Georgia, 'Times New Roman', serif",
+  fontSans:
+    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
   fontMono: "'JetBrains Mono', 'Fira Code', 'ui-monospace', monospace",
 
-  displayXl: { fontSize: 28, fontWeight: 400, lineHeight: 1.2, letterSpacing: -0.3 },
-  displayLg: { fontSize: 24, fontWeight: 400, lineHeight: 1.25, letterSpacing: -0.2 },
-  displayMd: { fontSize: 20, fontWeight: 400, lineHeight: 1.3, letterSpacing: 0 },
-  displaySm: { fontSize: 16, fontWeight: 400, lineHeight: 1.4, letterSpacing: 0 },
+  displayXl: {
+    fontSize: 28,
+    fontWeight: 400,
+    lineHeight: 1.2,
+    letterSpacing: -0.3,
+  },
+  displayLg: {
+    fontSize: 24,
+    fontWeight: 400,
+    lineHeight: 1.25,
+    letterSpacing: -0.2,
+  },
+  displayMd: {
+    fontSize: 20,
+    fontWeight: 400,
+    lineHeight: 1.3,
+    letterSpacing: 0,
+  },
+  displaySm: {
+    fontSize: 16,
+    fontWeight: 400,
+    lineHeight: 1.4,
+    letterSpacing: 0,
+  },
   title: { fontSize: 16, fontWeight: 500, lineHeight: 1.4 },
   body: { fontSize: 14, fontWeight: 400, lineHeight: 1.55 },
   caption: { fontSize: 12, fontWeight: 500, lineHeight: 1.4 },
   small: { fontSize: 11, fontWeight: 500, lineHeight: 1.4 },
-  overline: { fontSize: 12, fontWeight: 500, lineHeight: 1.4, letterSpacing: 1.5, textTransform: 'uppercase' as const },
-  mono: { fontSize: 13, fontWeight: 400, lineHeight: 1.6, fontFamily: 'var(--font-mono)' },
+  overline: {
+    fontSize: 12,
+    fontWeight: 500,
+    lineHeight: 1.4,
+    letterSpacing: 1.5,
+    textTransform: 'uppercase' as const,
+  },
+  mono: {
+    fontSize: 13,
+    fontWeight: 400,
+    lineHeight: 1.6,
+    fontFamily: 'var(--font-mono)',
+  },
   button: { fontSize: 14, fontWeight: 500, lineHeight: 1 },
 } as const;
 
 export const spacing = {
-  1: '4px', 2: '8px', 3: '12px', 4: '16px',
-  5: '20px', 6: '24px', 7: '28px', 8: '32px',
-  10: '40px', 12: '48px', 14: '56px', 16: '64px', 24: '96px',
+  1: '4px',
+  2: '8px',
+  3: '12px',
+  4: '16px',
+  5: '20px',
+  6: '24px',
+  7: '28px',
+  8: '32px',
+  10: '40px',
+  12: '48px',
+  14: '56px',
+  16: '64px',
+  24: '96px',
 } as const;
 
 export const radius = {
-  xs: '4px', sm: '6px', md: '8px', lg: '12px',
-  xl: '16px', '2xl': '24px', pill: '9999px', full: '9999px',
+  xs: '4px',
+  sm: '6px',
+  md: '8px',
+  lg: '12px',
+  xl: '16px',
+  '2xl': '24px',
+  pill: '9999px',
+  full: '9999px',
 } as const;
 
 export const componentTokens = {

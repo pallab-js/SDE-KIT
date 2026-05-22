@@ -1,12 +1,25 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { EditorView, keymap, lineNumbers, drawSelection, rectangularSelection } from '@codemirror/view';
+  import {
+    EditorView,
+    keymap,
+    lineNumbers,
+    drawSelection,
+    rectangularSelection,
+  } from '@codemirror/view';
   import { EditorState } from '@codemirror/state';
   import { defaultKeymap, history } from '@codemirror/commands';
   import { oneDark } from '@codemirror/theme-one-dark';
-  import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language';
+  import {
+    syntaxHighlighting,
+    defaultHighlightStyle,
+  } from '@codemirror/language';
 
-  let { original = '', modified = '', language = 'typescript' }: { original?: string; modified?: string; language?: string } = $props();
+  let {
+    original = '',
+    modified = '',
+    language = 'typescript',
+  }: { original?: string; modified?: string; language?: string } = $props();
 
   let container: HTMLDivElement;
   let view: EditorView;
@@ -24,7 +37,9 @@
         EditorView.editable.of(false),
         EditorView.theme({
           '&': { height: '100%', fontSize: '13px' },
-          '.cm-scroller': { fontFamily: "'JetBrains Mono', 'Fira Code', monospace" },
+          '.cm-scroller': {
+            fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
+          },
         }),
         keymap.of([...defaultKeymap]),
         history(),
@@ -73,6 +88,10 @@
     overflow: hidden;
   }
 
-  .diff-content :global(.cm-editor) { height: 100%; }
-  .diff-content :global(.cm-scroller) { overflow: auto; }
+  .diff-content :global(.cm-editor) {
+    height: 100%;
+  }
+  .diff-content :global(.cm-scroller) {
+    overflow: auto;
+  }
 </style>

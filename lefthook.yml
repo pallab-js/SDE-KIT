@@ -1,0 +1,16 @@
+# Lefthook pre-commit configuration
+pre-commit:
+  parallel: true
+  commands:
+    rustfmt:
+      glob: "*.rs"
+      run: cargo fmt -- {staged_files}
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --quiet
+    prettier:
+      glob: "*.{ts,svelte}"
+      run: bun x prettier --write {staged_files}
+    eslint:
+      glob: "*.{ts,svelte}"
+      run: bun x eslint {staged_files}

@@ -77,7 +77,9 @@ export class KeyboardService {
       label: 'Open Command Palette',
       combo: { key: 'p', meta: true },
       handler: () => {
-        document.dispatchEvent(new CustomEvent('palette:toggle', { detail: { open: true } }));
+        document.dispatchEvent(
+          new CustomEvent('palette:toggle', { detail: { open: true } })
+        );
       },
       context: 'global',
     });
@@ -144,7 +146,11 @@ export class KeyboardService {
       if (this.paletteOpen) return;
 
       for (const action of this.actions.values()) {
-        if (action.context !== 'global' && action.context !== this.activeContext) continue;
+        if (
+          action.context !== 'global' &&
+          action.context !== this.activeContext
+        )
+          continue;
         if (matchesKey(e, action.combo)) {
           e.preventDefault();
           e.stopPropagation();
@@ -158,18 +164,24 @@ export class KeyboardService {
 
 function dispatchNav(dir: 'next' | 'prev'): void {
   const panels = ['file-tree', 'editor', 'tasks', 'graph', 'terminal'];
-  const current = document.activeElement?.getAttribute('data-panel') || panels[0];
+  const current =
+    document.activeElement?.getAttribute('data-panel') || panels[0];
   const idx = panels.indexOf(current);
-  const next = dir === 'next'
-    ? panels[(idx + 1) % panels.length]
-    : panels[(idx - 1 + panels.length) % panels.length];
+  const next =
+    dir === 'next'
+      ? panels[(idx + 1) % panels.length]
+      : panels[(idx - 1 + panels.length) % panels.length];
 
-  const el = document.querySelector(`[data-panel="${next}"]`) as HTMLElement | null;
+  const el = document.querySelector(
+    `[data-panel="${next}"]`
+  ) as HTMLElement | null;
   el?.focus();
 
   const announcer = document.getElementById('keyboard-announcer');
   if (announcer) {
     announcer.textContent = '';
-    requestAnimationFrame(() => { announcer.textContent = `Focused ${next}`; });
+    requestAnimationFrame(() => {
+      announcer.textContent = `Focused ${next}`;
+    });
   }
 }

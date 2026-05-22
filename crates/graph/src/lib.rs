@@ -1,8 +1,8 @@
 pub mod layout;
 pub mod types;
 
-pub use types::{Graph, GraphEdge, GraphNode, GraphSnapshot, NodePosition};
 pub use layout::ForceDirectedLayout;
+pub use types::{Graph, GraphEdge, GraphNode, GraphSnapshot, NodePosition};
 
 #[cfg(test)]
 mod tests {
@@ -165,13 +165,8 @@ mod tests {
 
     #[test]
     fn test_force_directed_layout_deterministic() {
-        let nodes = vec![
-            GraphNode::new("task", "X"),
-            GraphNode::new("task", "Y"),
-        ];
-        let edges = vec![
-            GraphEdge::new(&nodes[0].id, &nodes[1].id, "depends"),
-        ];
+        let nodes = vec![GraphNode::new("task", "X"), GraphNode::new("task", "Y")];
+        let edges = vec![GraphEdge::new(&nodes[0].id, &nodes[1].id, "depends")];
 
         let layout = layout::ForceDirectedLayout::new(1234);
         let pos_a = layout.simulate(&nodes, &edges, 50, 0.1);

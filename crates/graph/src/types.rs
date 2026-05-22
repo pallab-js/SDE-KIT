@@ -43,7 +43,11 @@ impl GraphNode {
 }
 
 impl GraphEdge {
-    pub fn new(source_id: impl Into<String>, target_id: impl Into<String>, edge_type: impl Into<String>) -> Self {
+    pub fn new(
+        source_id: impl Into<String>,
+        target_id: impl Into<String>,
+        edge_type: impl Into<String>,
+    ) -> Self {
         GraphEdge {
             id: uuid::Uuid::new_v4().to_string(),
             source_id: source_id.into(),
@@ -78,7 +82,8 @@ impl Graph {
 
     pub fn remove_node(&mut self, id: &str) -> Option<GraphNode> {
         let node = self.nodes.remove(id)?;
-        self.edges.retain(|e| e.source_id != id && e.target_id != id);
+        self.edges
+            .retain(|e| e.source_id != id && e.target_id != id);
         self.adjacency.remove(id);
         for adj in self.adjacency.values_mut() {
             adj.retain(|n| n != id);

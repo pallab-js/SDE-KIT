@@ -26,11 +26,16 @@ function createPomodoro() {
   let timer: ReturnType<typeof setInterval> | null = null;
 
   function tick() {
-    store.update(s => {
+    store.update((s) => {
       if (s.timeLeft <= 1) {
         if (s.status === 'focus') {
           notify('Focus session complete! Time for a break.', 'info');
-          return { ...s, timeLeft: s.breakDuration, status: 'break', sessionsCompleted: s.sessionsCompleted + 1 };
+          return {
+            ...s,
+            timeLeft: s.breakDuration,
+            status: 'break',
+            sessionsCompleted: s.sessionsCompleted + 1,
+          };
         } else {
           notify('Break over! Ready to focus?', 'info');
           return { ...s, timeLeft: s.focusDuration, status: 'idle' };
@@ -43,12 +48,13 @@ function createPomodoro() {
   function start() {
     const s = get(store);
     if (s.status === 'idle' || s.status === 'break') {
-      const nextStatus: PomodoroStatus = s.status === 'break' ? 'break' : 'focus';
-      store.update(v => ({ ...v, status: nextStatus }));
+      const nextStatus: PomodoroStatus =
+        s.status === 'break' ? 'break' : 'focus';
+      store.update((v) => ({ ...v, status: nextStatus }));
       timer = setInterval(tick, 1000);
     } else if (s.status === 'paused') {
       timer = setInterval(tick, 1000);
-      store.update(v => ({ ...v, status: 'focus' }));
+      store.update((v) => ({ ...v, status: 'focus' }));
     }
   }
 
@@ -57,7 +63,7 @@ function createPomodoro() {
       clearInterval(timer);
       timer = null;
     }
-    store.update(v => ({ ...v, status: 'paused' }));
+    store.update((v) => ({ ...v, status: 'paused' }));
   }
 
   function stop() {
@@ -65,7 +71,7 @@ function createPomodoro() {
       clearInterval(timer);
       timer = null;
     }
-    store.update(s => ({
+    store.update((s) => ({
       ...s,
       status: 'idle',
       timeLeft: s.focusDuration,
@@ -73,11 +79,11 @@ function createPomodoro() {
   }
 
   function setFocusDuration(seconds: number) {
-    store.update(s => ({ ...s, focusDuration: seconds, timeLeft: seconds }));
+    store.update((s) => ({ ...s, focusDuration: seconds, timeLeft: seconds }));
   }
 
   function setBreakDuration(seconds: number) {
-    store.update(s => ({ ...s, breakDuration: seconds }));
+    store.update((s) => ({ ...s, breakDuration: seconds }));
   }
 
   function formatTime(seconds: number): string {

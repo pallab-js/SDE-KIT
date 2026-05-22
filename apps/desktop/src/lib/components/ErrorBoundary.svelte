@@ -48,7 +48,10 @@
       <button class="action-btn typo-caption" onclick={reset}>
         Try Again
       </button>
-      <button class="action-btn typo-caption" onclick={() => window.location.reload()}>
+      <button
+        class="action-btn typo-caption"
+        onclick={() => window.location.reload()}
+      >
         Reload App
       </button>
     </div>

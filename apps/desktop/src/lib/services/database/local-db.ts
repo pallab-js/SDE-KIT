@@ -1,6 +1,6 @@
 /**
  * Local-First Database Service
- * - Wraps Tauri Rust SQLite commands with version-based conflict detection
+ * - Wraps Tauri Rust SQLite export commands
  * - Provides export/backup for solo developers
  * - Zero cloud dependencies; works fully offline
  */
@@ -11,21 +11,9 @@ export interface DBResult<T> {
   success: boolean;
   data?: T;
   error?: string;
-  conflict?: ConflictResolution;
 }
-
-export type ConflictResolution = 'local-wins' | 'remote-wins' | 'manual' | 'merge';
 
 export type ExportFormat = 'json' | 'sqlite';
-
-export interface ProjectExport {
-  project: Record<string, unknown>;
-  tasks: unknown[];
-  milestones: unknown[];
-  graph: { nodes: unknown[]; edges: unknown[] };
-  exported_at: string;
-  version: string;
-}
 
 export class LocalDatabase {
   private static instance: LocalDatabase;
@@ -42,47 +30,33 @@ export class LocalDatabase {
 
   async initialize(): Promise<DBResult<void>> {
     if (this.initialized) return { success: true };
-    try {
-      await invoke('db_init', { });
-      this.initialized = true;
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: String(err) };
-    }
+    this.initialized = true;
+    return { success: true };
   }
 
-  async exportProject(projectId: string, format: ExportFormat): Promise<DBResult<Blob>> {
+  async exportProject(
+    projectId: string,
+    format: ExportFormat
+  ): Promise<DBResult<Blob>> {
     try {
       if (format === 'json') {
-        const [project, tasks, milestones, nodes, edges] = await Promise.all([
-          invoke<Record<string, unknown>>('get_project', { id: projectId }),
-          invoke<unknown[]>('get_tasks_by_project', { projectId }),
-          invoke<unknown[]>('get_milestones'),
-          invoke<unknown[]>('db_query', { query: 'SELECT * FROM graph_nodes WHERE project_id = ?', params: [projectId] }),
-          invoke<unknown[]>('db_query', { query: 'SELECT * FROM graph_edges WHERE project_id = ?', params: [projectId] }),
-        ]);
-        const data: ProjectExport = {
-          project, tasks, milestones,
-          graph: { nodes, edges },
-          exported_at: new Date().toISOString(),
-          version: '1.0',
+        const jsonStr = await invoke<string>('export_project_json', {
+          projectId,
+        });
+        return {
+          success: true,
+          data: new Blob([jsonStr], { type: 'application/json' }),
         };
-        return { success: true, data: new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }) };
       }
-      const bytes = await invoke<number[]>('db_export_sqlite', { project_id: projectId });
-      return { success: true, data: new Blob([new Uint8Array(bytes)], { type: 'application/x-sqlite3' }) };
-    } catch (err) {
-      return { success: false, error: String(err) };
-    }
-  }
-
-  async listTables(): Promise<DBResult<string[]>> {
-    try {
-      const rows = await invoke<{ name: string }[]>('db_query', {
-        query: "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name",
-        params: [],
+      const bytes = await invoke<number[]>('export_project_sqlite', {
+        projectId,
       });
-      return { success: true, data: rows.map(r => r.name) };
+      return {
+        success: true,
+        data: new Blob([new Uint8Array(bytes)], {
+          type: 'application/x-sqlite3',
+        }),
+      };
     } catch (err) {
       return { success: false, error: String(err) };
     }
