@@ -52,6 +52,46 @@ impl Database {
 
     fn run_migrations(&self) -> Result<(), DbError> {
         let mut conn = self.pool.get()?;
+        
+        // Self-heal: If user_version is 0, but tables were already initialized ad-hoc in the past,
+        // align user_version to prevent duplicate column/table errors during migration.
+        let version: u32 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+        if version == 0 {
+            let has_tasks: bool = conn.query_row(
+                "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='tasks'",
+                [],
+                |r| r.get::<_, i32>(0)
+            ).unwrap_or(0) > 0;
+
+            if has_tasks {
+                let has_milestone_id = {
+                    let mut stmt = conn.prepare("PRAGMA table_info(tasks)")?;
+                    let mut rows = stmt.query([])?;
+                    let mut found = false;
+                    while let Some(row) = rows.next()? {
+                        let name: String = row.get(1)?;
+                        if name == "milestone_id" {
+                            found = true;
+                            break;
+                        }
+                    }
+                    found
+                };
+
+                if has_milestone_id {
+                    let has_notes: bool = conn.query_row(
+                        "SELECT count(*) FROM sqlite_master WHERE type='table' AND name='notes'",
+                        [],
+                        |r| r.get::<_, i32>(0)
+                    ).unwrap_or(0) > 0;
+
+                    let target_version = if has_notes { 3 } else { 2 };
+                    conn.execute(&format!("PRAGMA user_version = {}", target_version), [])?;
+                    log::info!("Self-healed legacy database user_version from 0 to {}", target_version);
+                }
+            }
+        }
+
         let migrations = migrations::get_migrations();
         migrations.to_latest(&mut conn)?;
         Ok(())
